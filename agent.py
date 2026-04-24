@@ -11,7 +11,7 @@ import google.generativeai as genai
 # --- Configuration ---
 DB_PATH = os.path.join("data", "articles.db")
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-1.5-flash")  # fast, capable model
+model = genai.GenerativeModel("gemini-2.5-flash")  # fast, capable model
 
 # --- Curated RSS Feeds ---
 FEEDS = [
