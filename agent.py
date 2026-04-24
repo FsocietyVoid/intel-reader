@@ -55,38 +55,39 @@ def article_exists(article_id):
     return exists
 
 # --- AI Analysis ---
-def analyze_with_gemini(title, raw_text):
-    prompt = f"""
-Analyze the following news article for cybersecurity and geopolitical intelligence.
-Return a JSON object with exactly these keys:
-- "summary": a concise 2-3 sentence summary of the article.
-- "threat_level": one of "High", "Medium", "Low", "Info" based on the urgency and potential impact.
-- "entities": list of CVE IDs, malware names, threat actors, or key countries/organizations mentioned.
-- "geopolitical_impact": brief assessment of potential geopolitical effects, or "None" if not applicable.
+import time
+from google.api_core import exceptions as google_exceptions
 
-Article Title: {title}
-Article Content: {raw_text[:2000]}
+def analyze_with_gemini(title, raw_text, max_retries=3):
+    prompt = f"""..."""  # keep your existing prompt
 
-JSON:
-"""
-    try:
-        response = model.generate_content(prompt)
-        text = response.text.strip()
-        # Clean possible markdown code fences
-        if text.startswith("```json"):
-            text = text[7:]
-        if text.endswith("```"):
-            text = text[:-3]
-        return json.loads(text)
-    except Exception as e:
-        print(f"Gemini error: {e}")
-        return {
-            "summary": "Analysis failed",
-            "threat_level": "Info",
-            "entities": [],
-            "geopolitical_impact": "None",
-        }
-
+    for attempt in range(max_retries):
+        try:
+            response = model.generate_content(prompt)
+            text = response.text.strip()
+            # clean fences as before ...
+            return json.loads(text)
+        except google_exceptions.ResourceExhausted as e:
+            if attempt < max_retries - 1:
+                sleep_time = 2 ** attempt  # 1, 2, 4 seconds
+                print(f"Rate limit hit, sleeping {sleep_time}s...")
+                time.sleep(sleep_time)
+            else:
+                print("Rate limit exceeded after retries, storing raw article only.")
+                return {
+                    "summary": "Analysis not available – rate limited. Read original article.",
+                    "threat_level": "Info",
+                    "entities": [],
+                    "geopolitical_impact": "None",
+                }
+        except Exception as e:
+            print(f"Gemini error: {e}")
+            return {
+                "summary": "Analysis failed",
+                "threat_level": "Info",
+                "entities": [],
+                "geopolitical_impact": "None",
+            }
 # --- Main Feed Fetcher ---
 def fetch_and_process():
     conn = sqlite3.connect(DB_PATH)
