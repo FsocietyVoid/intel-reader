@@ -3,6 +3,7 @@ import sqlite3
 import json
 import pandas as pd
 import os
+import agent
 
 DB_PATH = os.path.join("data", "articles.db")
 
@@ -28,6 +29,13 @@ def main():
     st.markdown("*AI‑powered summaries of cybersecurity and geopolitical news.*")
 
     # Attempt to load data
+    with st.sidebar:
+        if st.button("🔄 Fetch & Analyze New Articles (Manual)"):
+            with st.spinner("Processing feeds..."):
+                import agent  # import is fine here; move to top for cleanliness
+                agent.fetch_and_process()
+            st.success("Done. Refresh the page to see updated data.")
+            st.rerun()
     try:
         df = load_articles()
     except Exception:
