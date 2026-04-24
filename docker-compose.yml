@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  intel-dashboard:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount local ./data folder to /data inside the container (persistent DB)
+      - ./data:/data
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}   # set in .env or export beforehand
+    command: >
+      sh -c "python agent.py && streamlit run app.py --server.port 8501 --server.address 0.0.0.0"
